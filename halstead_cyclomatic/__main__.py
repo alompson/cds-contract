@@ -6,8 +6,8 @@ import argparse
 import os.path
 import sys
 
-
 from javalang import tokenizer
+from tabulate import tabulate
 
 from halstead_cyclomatic.cyclomatic import calculate_cyclomatic
 from halstead_cyclomatic.get_operators_operands_count import \
@@ -15,23 +15,17 @@ from halstead_cyclomatic.get_operators_operands_count import \
 from halstead_cyclomatic.halstead import calculate_halstead
 
 
-def pretty_print(data):
-    """print dictionary items separated by a ':' and the number of tabs required to align the values
+def print_table(data, headers=[], title=None):
+    """print dictionary as a two column table
 
     Args:
         data (dictionary): dictionary to print
+        headers (list): table headers
+        title (str): table title
     """
-    longest_key_len = len(max(data.keys(), key=len))
-    tabs = '\t' * (longest_key_len // 4)
-
-    for key, value in data.items():
-        print(f"\t{key}:{tabs}{round(value, 2)}")
-
-
-def print_separator():
-    """prints a line of '-' surrounded by '\n'
-    """
-    print(f"\n{'-' * 150}\n")
+    if title:
+        print("\n", title, "\n")
+    print(tabulate(data.items(), headers=headers, tablefmt='fancy_grid'))
 
 
 parser = argparse.ArgumentParser(
@@ -51,29 +45,21 @@ with open(args.java_file, 'r', encoding='utf-8') as file:
 
     operators, operands = get_operators_operands_count(tokens)
 
-    print("Operators:")
-    pretty_print(operators)
-
-    print("Operands:")
-    pretty_print(operands)
-
-    print_separator()
+    print_table(
+        {'Cyclomatic complexity': calculate_cyclomatic(operators)})
 
     n1 = len(operators)
     n2 = len(operands)
     N1 = sum(operators.values())
     N2 = sum(operands.values())
 
-    print(f"n1:\t{n1}")
-    print(f"n2:\t{n2}")
-    print(f"N1:\t{N1}")
-    print(f"N2:\t{N2}")
+    print_table({"Number of Distinct Operators": n1,
+                 "Number of Distinct Operands": n2,
+                 "Number of Operators": N1,
+                 "Number of Operands": N2,
+                 **calculate_halstead(
+                     n1, N1, n2, N2)}, ['Metric', 'Value'], 'Halstead Metrics:')
 
-    print_separator()
+    print_table(operators, ['Operator', 'Count'], 'Operators:')
 
-    halstead = calculate_halstead(n1, N1, n2, N2)
-    print("Halstead Complexity: \n")
-    pretty_print(halstead)
-
-    print_separator()
-    print(f"Cyclomatic complexity: {calculate_cyclomatic(operators)}")
+    print_table(operands, ['Operand', 'Count'], 'Operands:')
