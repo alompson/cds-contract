@@ -1,0 +1,17 @@
+[
+  "Literal",
+  "Integer",
+  "DecimalInteger",
+  "OctalInteger",
+  "BinaryInteger",
+  "HexInteger",
+  "FloatingPoint",
+  "DecimalFloatingPoint",
+  "HexFloatingPoint",
+  "Boolean",
+  "Character",
+  "String",
+  "Null",
+  "Annotation",
+  "Identifier"
+]
