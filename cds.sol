@@ -2,10 +2,10 @@
 // Version of compiler
 pragma solidity >=0.7.0 <0.9.0;
 
-//sdc v2: only affirmation and one objection
+//cds v2: only affirmation and one objection
 
 //contract == new affirmation
-contract sdc {
+contract cds {
 
     struct objection {
         address payable o_owner;    // who stated this objection
@@ -42,7 +42,7 @@ contract sdc {
         uint256 _value 
     );
 
-    constructor(string memory _str) payable {
+    constructor(string memory _str, string[] memory _str_tokens) payable {
         owner = payable(msg.sender);
         require(msg.value == 5000000000000000000, "To create an affirmation, you should pay 5 ether"); // owner needs the money to create affirmation
         createdAt = block.timestamp;
@@ -213,4 +213,44 @@ contract sdc {
             payable(msg.sender).transfer(amount);
         }
     }
+
+
+    //functions for source code complexity analysis
+
+    function complexity_analysis(string memory _str, string[] memory _str_tokens) private pure returns (uint256){
+        
+        //build string from array of source code tokens provided
+        string memory _str_built_from_tokens = build_parsed_str(_str_tokens);
+
+        if(compare_str(_str, _str_built_from_tokens)){
+            //if the source code given in _str is equal to the string built from _str_tokens, it starts the complexity analysis
+
+        
+        } else {
+            //if _str_built_from_tokens is not equal to _str, the source codes do not match, and the contract won't build!
+
+        }
+
+        return 0;
+    }
+
+    //helper of complexity_analysis()
+    function build_parsed_str(string[] memory _str_tokens) private pure returns (string memory) {
+        string memory _str_built_from_tokens = "";
+
+        for(uint i = 0; i < _str_tokens.length; i++) {
+            string memory token = _str_tokens[i];
+
+        }
+
+        return _str_built_from_tokens;
+    }
+
+    //helper of complexity_analysis()
+    function compare_str(string memory _str, string memory _str_built_from_tokens) private pure returns (bool) {
+        //will compare the hash of each of the strings
+        
+        return false;
+    }
+
 }
