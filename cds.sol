@@ -42,7 +42,7 @@ contract cds {
         uint256 _value 
     );
 
-    constructor(string memory _str, string[] memory _str_tokens) payable {
+    constructor(string memory _str, string[][] memory _str_tokens) payable {
         owner = payable(msg.sender);
         require(msg.value == 5000000000000000000, "To create an affirmation, you should pay 5 ether"); // owner needs the money to create affirmation
         createdAt = block.timestamp;
@@ -217,40 +217,73 @@ contract cds {
 
     //functions for source code complexity analysis
 
-    function complexity_analysis(string memory _str, string[] memory _str_tokens) private pure returns (uint256){
+    function complexity_analysis(string memory _str, string[][] memory _str_tokens) private pure returns (int){
         
         //build string from array of source code tokens provided
         string memory _str_built_from_tokens = build_parsed_str(_str_tokens);
 
         if(compare_str(_str, _str_built_from_tokens)){
             //if the source code given in _str is equal to the string built from _str_tokens, it starts the complexity analysis
+            uint256 operators = 0; //total of operators
+            uint256 operands = 0; //total of operands
+            uint256 u_operators = 0; //number of unique operators
+            uint256 u_operands = 0; //number of unique operands
+
+            //map the list of valid operators
+
+            
+
+            //iterate throught list of tokens
+
+
 
         
         } else {
             //if _str_built_from_tokens is not equal to _str, the source codes do not match, and the contract won't build!
-
+            return -1;
         }
-
-        return 0;
     }
 
     //helper of complexity_analysis()
-    function build_parsed_str(string[] memory _str_tokens) private pure returns (string memory) {
-        string memory _str_built_from_tokens = "";
+    function build_parsed_str(string[][] memory _str_tokens) private pure returns (string memory) {
+        string memory _new_str = "";
 
         for(uint i = 0; i < _str_tokens.length; i++) {
-            string memory token = _str_tokens[i];
+            string memory token = _str_tokens[i][0];
 
+            /*each _str_tokens[i][1] has a code that can be "s", "n", "t", "c":
+            s -> space
+            n -> new line
+            t -> whitespace
+            c -> concatenate
+            EOF -> end of file
+
+            These help this string builder function to build back the source code from the tokens for it to be exactly equal to the original source code
+            */
+            if(keccak256(abi.encodePacked(_str_tokens[i][1])) == keccak256(abi.encodePacked("s"))) {
+                _new_str = string.concat(_new_str, string.concat(token, " "));
+            } else if(keccak256(abi.encodePacked(_str_tokens[i][1])) == keccak256(abi.encodePacked("n"))) {
+                _new_str = string.concat(_new_str, string.concat(token, "\n"));               
+            } else if(keccak256(abi.encodePacked(_str_tokens[i][1])) == keccak256(abi.encodePacked("t"))) {
+                _new_str = string.concat(_new_str, string.concat(token, "\t"));               
+            } else if(keccak256(abi.encodePacked(_str_tokens[i][1])) == keccak256(abi.encodePacked("c"))) {
+                _new_str = string.concat(_new_str, token);               
+            } else if(keccak256(abi.encodePacked(_str_tokens[i][1])) == keccak256(abi.encodePacked("EOF"))) {
+                _new_str = string.concat(_new_str, token);                
+            }
         }
 
-        return _str_built_from_tokens;
+        return _new_str;
     }
 
     //helper of complexity_analysis()
     function compare_str(string memory _str, string memory _str_built_from_tokens) private pure returns (bool) {
         //will compare the hash of each of the strings
-        
-        return false;
+        if(keccak256(abi.encodePacked(_str)) == keccak256(abi.encodePacked(_str_built_from_tokens))) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
 }
