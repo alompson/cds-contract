@@ -37,6 +37,11 @@ contract cds {
     mapping(address => uint) statement_voted;   // logs in which statement they've voted to
     mapping(address => uint) money_owned;       // logs how much money is owned to each person
 
+    struct operator {                           // used for the source code complexity analysis
+        string op;
+        bool is_unique;
+    }
+
     event print_money( 
         address indexed _from, 
         uint256 _value 
@@ -224,17 +229,203 @@ contract cds {
 
         if(compare_str(_str, _str_built_from_tokens)){
             //if the source code given in _str is equal to the string built from _str_tokens, it starts the complexity analysis
-            uint256 operators = 0; //total of operators
-            uint256 operands = 0; //total of operands
-            uint256 u_operators = 0; //number of unique operators
-            uint256 u_operands = 0; //number of unique operands
+            uint256 N1 = 0; //total of operators
+            uint256 N2 = 0; //total of operands
+            uint256 n1 = 0; //number of unique operators
+            uint256 n2 = 0; //number of unique operands
 
             //map the list of valid operators
+            operator[] memory valid_operators = new operator[](58);
+            valid_operators[0].op = "+";
+            valid_operators[0].is_unique = true;
 
+            valid_operators[1].op = "-";
+            valid_operators[1].is_unique = true;
+
+            valid_operators[2].op = "*";
+            valid_operators[2].is_unique = true;
+
+            valid_operators[3].op = "/";
+            valid_operators[3].is_unique = true;
+
+            valid_operators[4].op = "%";
+            valid_operators[4].is_unique = true;
+
+            valid_operators[5].op = "**";
+            valid_operators[5].is_unique = true;
+
+            valid_operators[6].op = "//";
+            valid_operators[6].is_unique = true;
+
+            valid_operators[7].op = "False";
+            valid_operators[7].is_unique = true;
+
+            valid_operators[8].op = "None";
+            valid_operators[8].is_unique = true;
+
+            valid_operators[9].op = "True";
+            valid_operators[9].is_unique = true;
+
+            valid_operators[10].op = "and";
+            valid_operators[10].is_unique = true;
+
+            valid_operators[11].op = "as";
+            valid_operators[11].is_unique = true;
+
+            valid_operators[12].op = "assert";
+            valid_operators[12].is_unique = true;
+
+            valid_operators[13].op = "async";
+            valid_operators[13].is_unique = true;
+
+            valid_operators[14].op = "await";
+            valid_operators[14].is_unique = true;
+
+            valid_operators[15].op = "break";
+            valid_operators[15].is_unique = true;
+
+            valid_operators[16].op = "class";
+            valid_operators[16].is_unique = true;
+
+            valid_operators[17].op = "continue";
+            valid_operators[17].is_unique = true;
+
+            valid_operators[18].op = "def";
+            valid_operators[18].is_unique = true;
+
+            valid_operators[19].op = "del";
+            valid_operators[19].is_unique = true;
+
+            valid_operators[20].op = "elif";
+            valid_operators[20].is_unique = true;
+
+            valid_operators[21].op = "else";
+            valid_operators[21].is_unique = true;
+
+            valid_operators[22].op = "except";
+            valid_operators[22].is_unique = true;
+
+            valid_operators[23].op = "finally";
+            valid_operators[23].is_unique = true;
+
+            valid_operators[24].op = "for";
+            valid_operators[24].is_unique = true;
+
+            valid_operators[25].op = "from";
+            valid_operators[25].is_unique = true;
+
+            valid_operators[26].op = "global";
+            valid_operators[26].is_unique = true;
+
+            valid_operators[27].op = "if";
+            valid_operators[27].is_unique = true;
+
+            valid_operators[28].op = "import";
+            valid_operators[28].is_unique = true;
+
+            valid_operators[29].op = "in";
+            valid_operators[29].is_unique = true;
+
+            valid_operators[30].op = "is";
+            valid_operators[30].is_unique = true;
+
+            valid_operators[31].op = "nonlocal";
+            valid_operators[31].is_unique = true;
+
+            valid_operators[32].op = "not";
+            valid_operators[32].is_unique = true;
+
+            valid_operators[33].op = "or";
+            valid_operators[33].is_unique = true;
+
+            valid_operators[34].op = "pass";
+            valid_operators[34].is_unique = true;
+
+            valid_operators[35].op = "raise";
+            valid_operators[35].is_unique = true;
+
+            valid_operators[36].op = "return";
+            valid_operators[36].is_unique = true;
+
+            valid_operators[37].op = "try";
+            valid_operators[37].is_unique = true;
+
+            valid_operators[38].op = "while";
+            valid_operators[38].is_unique = true;
+
+            valid_operators[39].op = "with";
+            valid_operators[39].is_unique = true;
+
+            valid_operators[40].op = "yield";
+            valid_operators[40].is_unique = true;
+
+            valid_operators[41].op = "with";
+            valid_operators[41].is_unique = true;
+
+            valid_operators[42].op = "<";
+            valid_operators[42].is_unique = true;
+
+            valid_operators[43].op = ">";
+            valid_operators[43].is_unique = true;
+
+            valid_operators[44].op = "<=";
+            valid_operators[44].is_unique = true;
+
+            valid_operators[45].op = ">=";
+            valid_operators[45].is_unique = true;
+
+            valid_operators[46].op = "==";
+            valid_operators[46].is_unique = true;
+
+            valid_operators[47].op = "!=";
+            valid_operators[47].is_unique = true;
+
+            valid_operators[48].op = "(";
+            valid_operators[48].is_unique = true;
+
+            valid_operators[49].op = ")";
+            valid_operators[49].is_unique = true;
+
+            valid_operators[50].op = "[";
+            valid_operators[50].is_unique = true;
+
+            valid_operators[51].op = "]";
+            valid_operators[51].is_unique = true;
+
+            valid_operators[52].op = "{";
+            valid_operators[52].is_unique = true;
+
+            valid_operators[53].op = "}";
+            valid_operators[53].is_unique = true;
+
+            valid_operators[54].op = "->";
+            valid_operators[54].is_unique = true;
+
+            valid_operators[55].op = "@";
+            valid_operators[55].is_unique = true;
+
+            valid_operators[56].op = ";";
+            valid_operators[56].is_unique = true;
+
+            valid_operators[57].op = ",";
+            valid_operators[57].is_unique = true;
+
+
+            //iterate throught list of tokens and fill 
+            for(uint256 i = 0; keccak256(abi.encodePacked(_str_tokens[i][1])) != keccak256(abi.encodePacked("EOF")); i++) {
+                for(uint j = 0; j < valid_operators.length; j++) {
+                    if(keccak256(abi.encodePacked(_str_tokens[i][0])) != keccak256(abi.encodePacked(valid_operators[j].op))) {
+                        if(valid_operators[j].is_unique == true) {
+                            valid_operators[j].is_unique = false;
+                            n1++;
+                        }
+                        N1++;
+                    } else {
+                        N2++;
+                    }
+                }
+            }
             
-
-            //iterate throught list of tokens
-
 
 
         
@@ -248,7 +439,7 @@ contract cds {
     function build_parsed_str(string[][] memory _str_tokens) private pure returns (string memory) {
         string memory _new_str = "";
 
-        for(uint i = 0; i < _str_tokens.length; i++) {
+        for(uint256 i = 0; keccak256(abi.encodePacked(_str_tokens[i][1])) != keccak256(abi.encodePacked("EOF")); i++) {
             string memory token = _str_tokens[i][0];
 
             /*each _str_tokens[i][1] has a code that can be "s", "n", "t", "c":
