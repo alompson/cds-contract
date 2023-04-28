@@ -5,8 +5,8 @@ calculates Halstead Metric and Cyclomatic Complexity for a given java file
 ## installation
 
 ```bash
-py -m venv venv
-venv/Scripts/python -m pip install -r requirements.txt
+python -m venv venv
+venv/bin/python -m pip install -r requirements.txt
 ```
 
 ## args
