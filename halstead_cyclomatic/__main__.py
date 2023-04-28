@@ -6,6 +6,8 @@ import ipfshttpclient
 import argparse
 import os.path
 import sys
+from web3 import Web3
+
 
 from javalang import tokenizer
 from tabulate import tabulate
@@ -63,8 +65,8 @@ try:
     # Retrieve the file contents as bytes
     file_contents = client.cat(args.cid)
 
-    print("\n\nSOURCE CODE:\n\n")
-    print(file_contents)
+    #print("\n\nSOURCE CODE:\n\n")
+    #print(file_contents)
     
 except Exception as e:
     print(f"Error retrieving file with CID {cid} from IPFS: {e}")
@@ -78,22 +80,21 @@ tokens = list(tokenizer.tokenize(code))
 
 operators, operands = get_operators_operands_count(tokens)
 
-print_table(
-    {'Cyclomatic complexity': calculate_cyclomatic(operators)})
-
 n1 = len(operators)
 n2 = len(operands)
 N1 = sum(operators.values())
 N2 = sum(operands.values())
 
-print_table({#"Number of Distinct Operators": n1,
-                #"Number of Distinct Operands": n2,
-                #"Number of Operators": N1,
-                #"Number of Operands": N2,
-                **calculate_halstead(
-                    n1, N1, n2, N2)}, ['Metric', 'Value'], 'Halstead Metrics:')
+cyclomatic = calculate_cyclomatic(operators)
+halstead_dif = int(calculate_halstead(n1, N1, n2, N2))
 
-#print_table(operators, ['Operator', 'Count'], 'Operators:')
+print_table(
+    {'Cyclomatic complexity': cyclomatic})
 
-#print_table(operands, ['Operand', 'Count'], 'Operands:')
+
+#Does not need all the values, only difficulty
+print_table({'Halstead Difficulty': halstead_dif})
+
+
+#Now, needs to send these values to the blockchain for the CDS contract
 
