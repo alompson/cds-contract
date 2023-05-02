@@ -69,7 +69,7 @@ try:
     #print(file_contents)
     
 except Exception as e:
-    print(f"Error retrieving file with CID {cid} from IPFS: {e}")
+    print(f"Error retrieving file with CID {args} from IPFS: {e}")
 
 
 
