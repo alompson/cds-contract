@@ -17,10 +17,18 @@ contract cds {
 
     //statements[0] is the affirmation, the rest is composed of objections
     Statement[] private statements;
+    bool private cdsEnded;
+    bool private affirmationPassed;
     
     mapping (uint => address) public statementToOwner;  //links statement id to the address that created the statement
     mapping (uint => uint) public statementVoteCount;   //links each statement id to the number of votes it has
-    mapping (address => uint) public VoterToStatement;  //links each voter to the statement they voted for
+
+    //has to be address => Statement and not address => uint because by default, values are setted to 0, and 0 matters in this application because is the id of the first statement;
+    mapping (address => Statement) public voterToStatement;  //links each voter to the statement they voted for
+    mapping (address => bool) public hasVoted; 
+
+    event newStatement();
+
 
     constructor(string memory cid, uint halstead, uint cyclomatic) payable{
         _owner = msg.sender;
@@ -28,6 +36,7 @@ contract cds {
 
         //create the main affirmation of the contract instance
         _createStatement(cid);
+        cdsEnded = false;
     }
 
 
@@ -42,9 +51,23 @@ contract cds {
         _;
     }
 
-    //returns true when timer of last statement in the array has ended
-    function lastHasEnded() public view returns (bool) {
-        return block.timestamp > statements[statements.length-1].closesAt; 
+    modifier cdsOpen() {
+        require((cdsEnded == false), "This discussion is settled");
+        _;
+    }
+
+    function _closeCds() private {
+        cdsEnded = true;
+    }
+
+    //guarantees ID is valid
+    function _idExists(uint id) private view returns (bool) {
+        return id < statements.length;
+    }
+
+    //returns true when timer of id's statement has ended
+    function _hasEnded(uint id) private view returns (bool) {
+        return block.timestamp > statements[id].closesAt; 
     }
 
     function _calculateComplexity(uint halstead, uint cyclomatic) private {
@@ -65,20 +88,46 @@ contract cds {
         uint id = statements.length - 1;
         statementToOwner[id] = msg.sender; //assigns a owner to each statement
         statementVoteCount[id] = 0; //no votes yet
+        
+        emit newStatement();
+
     }
 
     function _calculateStatementTimespan() private view returns(uint) {
         //the length of array is used to guarantee that each new statement will have a lower timespan
         uint statementTimespan = block.timestamp + complexity*(1 days)/(statements.length + 1); 
+
         return statementTimespan;
     }
+
+    function _hashStatement(Statement memory s) private pure returns (bytes32) {
+        //hash using the two fields in a statement that never change, that are content and createdAt
+        return keccak256(abi.encode(s.content, s.createdAt)); 
+    }
+
+    //used in changeVote
+    function _compareStatements(Statement memory a, Statement memory b) private pure returns(bool) {
+        return _hashStatement(a) == _hashStatement(b);
+    }
+
+    //everytime a debate is settled, the voters of winning statement get a prize
+    function _payVotersOfWinningStatement(uint id) private {}
+
+    //when original statement wins, it is registered on blockchain
+    function _registerAfirmationOnBlockchain() private {
+        affirmationPassed = true;
+    }
+    function _affirmationBlockedBySdc() private {
+        affirmationPassed = false;
+    }
+
 
     //CDS functions
 
 
-    function createObjection(string memory objection) public notOwner() {
+    function createObjection(string memory objection) public notOwner() cdsOpen(){
         //For an objection to be created, The last affirmation needs to be within its timer
-        require((!lastHasEnded()), "Cannot create objection. Needs to settle previous objection");
+        require((!_hasEnded(statements.length-1)), "Cannot create objection on previous closed affirmation");
 
         _createStatement(objection);
 
@@ -94,10 +143,101 @@ contract cds {
         //since an objection is at least on position [1], (operation statements.length - 2) will always be >= 0
         statements[length - 2].open = false;
 
+
+        //Also when new objection is created, voters have the option to change their vote
+
     }
 
-    function vote() public{
+    function vote(uint id) public payable cdsOpen(){
+        //statement must be valid
+        require ((_idExists(id)), "statement id not valid");
 
+        //Statement needs to be within its timer
+        require((!_hasEnded(id)), "statement closed for further votes");
+        
+        //require person not having voted on statements previously
+        require((!hasVoted[msg.sender]), "You already voted");       
+
+        require((msg.value == 1000000000000000000), "To vote you should pay 1 ether"); // owner needs the money to vote
+
+        //Can vote. Update mappings
+        hasVoted[msg.sender] = true; //tells the voter already voted
+        voterToStatement[msg.sender] = statements[id]; //points user to the statement they voted for
+        statementVoteCount[id]++; //statement receives one more vote
+    }
+
+    //when called, this function updates the vote of msg.sender to point to the last objection created
+    function changeVote(uint previousVoteId) public payable cdsOpen(){
+        require((hasVoted[msg.sender]), "To change the vote, you should vote on a previous statement");
+
+        uint newStatementId = statements.length -1;
+
+        //Last Statement needs to be within its timer
+        require((!_hasEnded(newStatementId)), "statement closed for further votes");
+
+        //Confirm the id the person passed is actually the id of the statement they voted for
+        require((_compareStatements(voterToStatement[msg.sender], statements[previousVoteId])), "You provided the wrong statement id. provide the id of the statement you voted previously");
+
+        //The person can't change the vote if they already voted for the last statement
+        require((!_compareStatements(voterToStatement[msg.sender], statements[newStatementId])), "You already voted for the last objection created");
+
+        //Can change vote. Update mappings
+        //remove previous vote
+        statementVoteCount[previousVoteId]--;
+
+        //point to new statement
+        voterToStatement[msg.sender] = statements[newStatementId];
+    }
+
+    //This should be automatically called when timer of last statement ends. In this implementation, this will be a manual call that any user, contributor or revisor, can perform
+    function settleDebate() public cdsOpen(){
+
+        uint length = statements.length;
+        //last statement's timer needs to have ended
+        require((_hasEnded(length-1)), "Last statement hasn't closed yet");
+
+        if(length == 1) { //There were no objections and affirmation timer ended
+        //In this case, affirmation was accepted. Discussion ended.
+            _payVotersOfWinningStatement(0);
+            _registerAfirmationOnBlockchain();
+            _closeCds();
+
+        } else if(length == 2){ //There is just one objection
+        //In this case, compare original affirmation with first objection
+            if(statementVoteCount[0] > statementVoteCount[1]) {
+                //if original affirmation wins, it is registered on blockchain
+                _payVotersOfWinningStatement(0);
+                _registerAfirmationOnBlockchain();
+            } else if(statementVoteCount[0] <= statementVoteCount[1]) {
+                //if objection wins, it blocks the affirmation
+                _payVotersOfWinningStatement(1);
+                _affirmationBlockedBySdc();
+            } 
+            //in any case, discussion ended
+            _closeCds();
+
+
+        } else { //There is more than one objection
+        //Compare last objection with penultimate objection
+            if(statementVoteCount[length-2] > statementVoteCount[length-1]){
+                _payVotersOfWinningStatement(length-2); //voters of winning statement get the prize
+
+                //penultimate statement wins. It cancels the last statement from the debate
+                statements.pop(); //remove last statement
+                //THERE ARE VOTERS POINTING TO THAT ERASED STATEMENT ON voterToStatement. THIS IS POTENTIALLY A MEMORY BREACH
+                length = length - 1; //reduce array length
+
+            } else if(statementVoteCount[length-2] <= statementVoteCount[length-1]) {
+                _payVotersOfWinningStatement(length-1); //voters of winning statement get the prize
+
+                //last statement wins. It cancels previous objection and make the debate go back to statement on position (length - 3)
+                statements.pop();
+                statements.pop();
+                //THERE ARE VOTERS POINTING TO THAT ERASED STATEMENT ON voterToStatement. THIS IS POTENTIALLY A MEMORY BREACH
+                length = length - 2;
+            }
+                statements[length-1].open = true; //sets the new last statement's open flag to true
+        }
     }
 
 }
