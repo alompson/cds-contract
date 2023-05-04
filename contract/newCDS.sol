@@ -27,7 +27,7 @@ contract cds {
     mapping (address => Statement) public voterToStatement;  //links each voter to the statement they voted for
     mapping (address => bool) public hasVoted; 
 
-    event newStatement();
+    event newStatement(string content, uint createdAt, uint closesAt);
 
 
     constructor(string memory cid, uint halstead, uint cyclomatic) payable{
@@ -89,7 +89,7 @@ contract cds {
         statementToOwner[id] = msg.sender; //assigns a owner to each statement
         statementVoteCount[id] = 0; //no votes yet
         
-        emit newStatement();
+        emit newStatement(new_statement.content, new_statement.createdAt, new_statement.closesAt);
 
     }
 
@@ -125,7 +125,7 @@ contract cds {
     //CDS functions
 
 
-    function createObjection(string memory objection) public notOwner() cdsOpen(){
+    function createObjection(string memory objection) public payable notOwner() cdsOpen(){
         //For an objection to be created, The last affirmation needs to be within its timer
         require((!_hasEnded(statements.length-1)), "Cannot create objection on previous closed affirmation");
 
@@ -135,7 +135,7 @@ contract cds {
         //when an objection is created, two things must happen:
 
         //1) Timer of previous affirmation needs to be frozen while the new objection is active. This is implemented by adding the timer of the new objection at the last position to the previous statement timers
-        for(uint i = 0; i < length-2; i++) {
+        for(uint i = 0; i <= length-2; i++) {
             statements[i].closesAt += statements[length-1].closesAt;
         }
 
@@ -167,8 +167,9 @@ contract cds {
     }
 
     //when called, this function updates the vote of msg.sender to point to the last objection created
-    function changeVote(uint previousVoteId) public payable cdsOpen(){
+    function changeVote(uint previousVoteId) public payable cdsOpen() notOwner(){
         require((hasVoted[msg.sender]), "To change the vote, you should vote on a previous statement");
+        require ((_idExists(previousVoteId)), "statement id not valid");
 
         uint newStatementId = statements.length -1;
 
@@ -184,9 +185,12 @@ contract cds {
         //Can change vote. Update mappings
         //remove previous vote
         statementVoteCount[previousVoteId]--;
-
+       
+        //add one vote to new statement
+        statementVoteCount[newStatementId]++;
         //point to new statement
         voterToStatement[msg.sender] = statements[newStatementId];
+
     }
 
     //This should be automatically called when timer of last statement ends. In this implementation, this will be a manual call that any user, contributor or revisor, can perform
@@ -238,6 +242,11 @@ contract cds {
             }
                 statements[length-1].open = true; //sets the new last statement's open flag to true
         }
+    }
+
+    function getStatement(uint id) public view{
+        require((_idExists(id)), "Invalid id provided");
+
     }
 
 }
