@@ -194,7 +194,7 @@ contract cds {
     }
 
     //This should be automatically called when timer of last statement ends. In this implementation, this will be a manual call that any user, contributor or revisor, can perform
-    function settleDebate() public cdsOpen(){
+    function settleDispute() public cdsOpen(){
 
         uint length = statements.length;
         //last statement's timer needs to have ended

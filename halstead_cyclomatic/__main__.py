@@ -6,7 +6,9 @@ import ipfshttpclient
 import argparse
 import os.path
 import sys
-from web3 import Web3
+import web3
+import w3
+from web3 import Web3, Account
 
 
 from javalang import tokenizer
@@ -96,5 +98,242 @@ print_table(
 print_table({'Halstead Difficulty': halstead_dif})
 
 
-#Now, needs to send these values to the blockchain for the CDS contract
+# Now, needs to send these values to the blockchain for the CDS contract
+# In this implementation, the contract will be deployed manually on Remix IDE using a Ganache local blockchain
+
+# Using a source code with:
+## Cyclomatic complexity = 4
+## Halstead difficulty = 59
+
+
+# # using a local Ganache Server, combined with Remix IDE for smart contract deployment
+# w3 = Web3(Web3.HTTPProvider('http://127.0.0.1:7545'))
+
+# # after deploying contract manually, this is the resulting abi
+# abi = [
+# 	{
+# 		"inputs": [
+# 			{
+# 				"internalType": "uint256",
+# 				"name": "previousVoteId",
+# 				"type": "uint256"
+# 			}
+# 		],
+# 		"name": "changeVote",
+# 		"outputs": [],
+# 		"stateMutability": "payable",
+# 		"type": "function"
+# 	},
+# 	{
+# 		"inputs": [
+# 			{
+# 				"internalType": "string",
+# 				"name": "objection",
+# 				"type": "string"
+# 			}
+# 		],
+# 		"name": "createObjection",
+# 		"outputs": [],
+# 		"stateMutability": "payable",
+# 		"type": "function"
+# 	},
+# 	{
+# 		"inputs": [
+# 			{
+# 				"internalType": "string",
+# 				"name": "cid",
+# 				"type": "string"
+# 			},
+# 			{
+# 				"internalType": "uint256",
+# 				"name": "halstead",
+# 				"type": "uint256"
+# 			},
+# 			{
+# 				"internalType": "uint256",
+# 				"name": "cyclomatic",
+# 				"type": "uint256"
+# 			}
+# 		],
+# 		"stateMutability": "payable",
+# 		"type": "constructor"
+# 	},
+# 	{
+# 		"anonymous": "false",
+# 		"inputs": [
+# 			{
+# 				"indexed": "false",
+# 				"internalType": "string",
+# 				"name": "content",
+# 				"type": "string"
+# 			},
+# 			{
+# 				"indexed": "false",
+# 				"internalType": "uint256",
+# 				"name": "createdAt",
+# 				"type": "uint256"
+# 			},
+# 			{
+# 				"indexed": "false",
+# 				"internalType": "uint256",
+# 				"name": "closesAt",
+# 				"type": "uint256"
+# 			}
+# 		],
+# 		"name": "newStatement",
+# 		"type": "event"
+# 	},
+# 	{
+# 		"inputs": [],
+# 		"name": "settleDebate",
+# 		"outputs": [],
+# 		"stateMutability": "nonpayable",
+# 		"type": "function"
+# 	},
+# 	{
+# 		"inputs": [
+# 			{
+# 				"internalType": "uint256",
+# 				"name": "id",
+# 				"type": "uint256"
+# 			}
+# 		],
+# 		"name": "vote",
+# 		"outputs": [],
+# 		"stateMutability": "payable",
+# 		"type": "function"
+# 	},
+# 	{
+# 		"inputs": [
+# 			{
+# 				"internalType": "uint256",
+# 				"name": "id",
+# 				"type": "uint256"
+# 			}
+# 		],
+# 		"name": "getStatement",
+# 		"outputs": [],
+# 		"stateMutability": "view",
+# 		"type": "function"
+# 	},
+# 	{
+# 		"inputs": [
+# 			{
+# 				"internalType": "address",
+# 				"name": "",
+# 				"type": "address"
+# 			}
+# 		],
+# 		"name": "hasVoted",
+# 		"outputs": [
+# 			{
+# 				"internalType": "bool",
+# 				"name": "",
+# 				"type": "bool"
+# 			}
+# 		],
+# 		"stateMutability": "view",
+# 		"type": "function"
+# 	},
+# 	{
+# 		"inputs": [
+# 			{
+# 				"internalType": "uint256",
+# 				"name": "",
+# 				"type": "uint256"
+# 			}
+# 		],
+# 		"name": "statementToOwner",
+# 		"outputs": [
+# 			{
+# 				"internalType": "address",
+# 				"name": "",
+# 				"type": "address"
+# 			}
+# 		],
+# 		"stateMutability": "view",
+# 		"type": "function"
+# 	},
+# 	{
+# 		"inputs": [
+# 			{
+# 				"internalType": "uint256",
+# 				"name": "",
+# 				"type": "uint256"
+# 			}
+# 		],
+# 		"name": "statementVoteCount",
+# 		"outputs": [
+# 			{
+# 				"internalType": "uint256",
+# 				"name": "",
+# 				"type": "uint256"
+# 			}
+# 		],
+# 		"stateMutability": "view",
+# 		"type": "function"
+# 	},
+# 	{
+# 		"inputs": [
+# 			{
+# 				"internalType": "address",
+# 				"name": "",
+# 				"type": "address"
+# 			}
+# 		],
+# 		"name": "voterToStatement",
+# 		"outputs": [
+# 			{
+# 				"internalType": "string",
+# 				"name": "content",
+# 				"type": "string"
+# 			},
+# 			{
+# 				"internalType": "bool",
+# 				"name": "open",
+# 				"type": "bool"
+# 			},
+# 			{
+# 				"internalType": "uint256",
+# 				"name": "createdAt",
+# 				"type": "uint256"
+# 			},
+# 			{
+# 				"internalType": "uint256",
+# 				"name": "closesAt",
+# 				"type": "uint256"
+# 			}
+# 		],
+# 		"stateMutability": "view",
+# 		"type": "function"
+# 	}
+# ]
+
+# contract_address = '0x5Cf3c64e6C6Fe46Db3225220118EC2BD8f3B062C'
+
+# contract = w3.eth.contract(address=contract_address, abi=abi)
+
+# #contract is a Python object that represenst the smart contract
+
+# #test the creation of an objection:
+
+# sender_address = '0x20ced187fB9FbAD0711580d9001BE99A01B33c11'
+# nonce = 1
+
+# function_signature = contract.functions.createObjection("your code sucks").build_transaction({'gas': 1000000})['data']
+
+# transaction = {
+#     'to': contract_address,
+#     'from': sender_address,
+#     'value': Web3.to_wei(5, 'ether'),
+#     'gas': 6721975,
+#     'gasPrice': Web3.to_wei(20, 'gwei'),
+#     'nonce': nonce,
+#     'data': function_signature,
+# }
+
+# private_key = '0x1d2696551f3ef144407e6cb1e68936585121a4e467a35c704284c8b8bca0fa97'
+# signed_txn = Account.sign_transaction(transaction, private_key)
+# tx_hash = w3.eth.send_raw_transaction(signed_txn.rawTransaction)
+
 
