@@ -2,6 +2,15 @@
 // Version of compiler
 pragma solidity >=0.7.0 <0.9.0;
 
+/*
+IMPORTANT
+In this implementation, the function settleDispute() and thus the whole system will only work correctly with one Affirmation and ONE Objection.
+To allow more objections, each statement needs a way to keep registered which are the addresses currently pointing (voting) to each statement, like
+an array of addresses linked to each statement. This way, when a dispute ends and there are more than 2 statements, the system will be able to 
+redirect the addresses of the voters of the statements in dispute to the previous statements.
+
+*/
+
 //contract == new affirmation
 contract cds {
 
@@ -164,7 +173,8 @@ contract cds {
         hasVoted[msg.sender] = true; //tells the voter already voted
         voterToStatement[msg.sender] = statements[id]; //points user to the statement they voted for
         statementVoteCount[id]++; //statement receives one more vote
-    }
+
+        }
 
     //when called, this function updates the vote of msg.sender to point to the last objection created
     function changeVote(uint previousVoteId) public payable cdsOpen() notOwner(){
