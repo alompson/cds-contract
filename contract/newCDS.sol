@@ -253,10 +253,4 @@ contract cds {
                 statements[length-1].open = true; //sets the new last statement's open flag to true
         }
     }
-
-    function getStatement(uint id) public view{
-        require((_idExists(id)), "Invalid id provided");
-
-    }
-
 }
